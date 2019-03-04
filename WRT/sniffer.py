@@ -8,14 +8,20 @@ import sqlite3
 import os
 from subprocess import call
 from iptable_controller import obtainMudProfile
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+import getpass
 
 #update database when new ACL is detected
 def update_device_domains(device_dict):
     valid = False
     port = ''
     protocol = ''
-    #name = device_dict['mac_address']
-    name = 'd0:25:98:ee:22:7f'
+    name = device_dict['mac_address']
+    # name = 'd0:25:98:ee:22:7f'
+    # name = '88:e9:fe:56:a8:35'
     domain = device_dict['domains'][0]['domain'][:-1]
     query = "SELECT NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = " + "'{0}'".format(name) + " AND DOMAIN = " + "'{0}'".format(domain)
     answer = cursor.execute(query)
@@ -86,6 +92,31 @@ def dns_callback(pkt):
             print("Error: Unable to parse DNS ans packet")
             return
 
+#send alert email to user
+def alert(useraddr):
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.ehlo()
+    server.starttls()
+    # password = raw_input('Type in your email password:')
+    #password = getpass.getpass("Type in your email password: ")
+    password = '123456789'
+    #sender = 'harrisonhuang1025@gmail.com' 
+    sender = 'lhyemailsender@gmail.com'
+    server.login(sender, password)
+
+    msg = MIMEText('FAIL to find a MUD for this device', 'plain', 'utf-8')
+    msg['Subject'] = Header('Alert from router', 'utf-8')
+    msg['From'] = sender
+    msg['To'] = useraddr
+    try:
+        server.sendmail(sender, useraddr, msg.as_string())
+        print 'email sended'
+    except:
+        print 'fail to send email'
+    finally:
+        server.quit()
+
+
 #filter for DNS packets only
 def standard_dns_callback(pkt):
     layers = list(layer_expand(pkt))
@@ -94,15 +125,27 @@ def standard_dns_callback(pkt):
         dns_callback(pkt)
 
     elif "BOOTP" in layers:
-	print(pkt[Ether].src)
-	mac_addr = str(pkt[Ether].src)
-
-	if mac_addr not in devices:
-	    devices.add(mac_addr)
-	    obtainMudProfile('iot_device', mac_addr)
-
-	else:
-	    pass
+    	print(pkt[Ether].src)
+    	mac_addr = str(pkt[Ether].src)
+        #print mac_addr, devices
+    	if mac_addr not in devices:
+            # dice = random.randint(0, 1)
+            dice = 0
+            if dice:
+                print 'roll 1, pretend that we get the MUD file'
+                devices.add(mac_addr)
+                obtainMudProfile('iot_device', mac_addr)
+            else:
+                blacklist.add(pkt[Ether].src)
+                print 'roll 0, means we dont have a MUD file'
+                # alert('wh2417@columbia.edu')
+                print blacklist
+                # iptables -A FORWARD -m mac --mac-source 00:0c:29:27:55:3F -j DROP
+                mac_source = pkt[Ether].src
+                call('iptables -A FORWARD  -m mac --mac-source ' + mac_source + ' -j DROP' + '', shell=True)
+                print 'drop packets for mac:' + mac_source
+    	else:
+    	    pass
 
     else:
         pass
@@ -111,6 +154,7 @@ def standard_dns_callback(pkt):
 def pktHandler(pkt):
     try:
         standard_dns_callback(pkt)
+        # print devices
     except Exception as e:
         print("Error: filtering for DNS failed")
         pass
@@ -124,8 +168,9 @@ def update_ipfilter(device_dict, port, protocol, ips):
     domain = device_dict['domains'][0]['domain'][:-1]
 
     #delete old ips from Database
-    #mac_source = device_dict['mac_address']
-    mac_source = 'd0:25:98:ee:22:7f'
+    mac_source = device_dict['mac_address']
+    # mac_source = 'd0:25:98:ee:22:7f'
+    # mac_source = '88:e9:fe:56:a8:35'
 
     old_query = "DELETE FROM DEVICE WHERE NAME = '{0}' AND DOMAIN = '{1}'".format(mac_source, domain)
     cursor.execute(old_query)
@@ -140,7 +185,7 @@ def update_ipfilter(device_dict, port, protocol, ips):
     #Append new iptables rules for specific IoT Device and domain endpoint
     for db_ip in device_dict['domains'][0].get('ips'):
         destination = str(db_ip)
-        print("Source: {0} destination: {1} protocol: {2} port: {3}".format(mac_source, destination, ip_protocol, dport))
+        #print("Source: {0} destination: {1} protocol: {2} port: {3}".format(mac_source, destination, ip_protocol, dport))
 
         call('iptables -A INPUT -p ' + ip_protocol + ' -d '+ destination + ' --dport ' + dport + ' -m mac --mac-source ' + mac_source + ' -j ' + target + '', shell=True)
         #update database with new ip
@@ -155,6 +200,7 @@ def update_ipfilter(device_dict, port, protocol, ips):
 exists = os.path.exists('device.db')
 devices = set()
 devices.add("10:da:43:96:1d:64")
+blacklist = set()
 
 if exists:
     conn = sqlite3.connect('device.db')

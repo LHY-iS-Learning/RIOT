@@ -25,7 +25,7 @@ def obtainMudProfile(device, mac_addr):
 
     profile = result.read().decode('utf-8')
 
-    print(profile)
+    #print(profile)
     #call config_ip.py's function to implement MUD profile
     implementIPTablesByJson(profile, mac_addr)
 
