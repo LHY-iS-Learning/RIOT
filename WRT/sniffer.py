@@ -105,7 +105,16 @@ def alert(useraddr):
     sender = 'lhyemailsender@gmail.com'
     server.login(sender, password)
 
-    msg = MIMEText('FAIL to find a MUD for this device', 'plain', 'utf-8')
+    message = '''\
+    <html>
+        <h1>FAIL to find a MUD for this device</h1>
+        <p> Go to the router address </p>
+        <a href = '192.168.2.1'> My router </a>
+    </html>
+    '''
+    # msg = MIMEText('FAIL to find a MUD for this device', 'plain', 'utf-8')
+    msg = MIMEText(message, 'html')
+
     msg['Subject'] = Header('Alert from router', 'utf-8')
     msg['From'] = sender
     msg['To'] = useraddr
@@ -164,7 +173,7 @@ def check_mud(pcap_file):
 
             for opt in dhcp.opts:
                 if opt[0] == 12: #161
-                    print 'option 53 found'
+                    print 'option 12 found'
                     # It would be nice to use the DHCP message type values in
                     # the DHCP module, but there doesn't appear to be a convenient
                     # way to get the comparison to work for both Python2 and Python3.
