@@ -12,7 +12,8 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
-import getpass
+
+import dpkt
 
 #update database when new ACL is detected
 def update_device_domains(device_dict):
@@ -99,7 +100,7 @@ def alert(useraddr):
     server.starttls()
     # password = raw_input('Type in your email password:')
     #password = getpass.getpass("Type in your email password: ")
-    password = '123456789'
+    password = '1234567890s'
     #sender = 'harrisonhuang1025@gmail.com' 
     sender = 'lhyemailsender@gmail.com'
     server.login(sender, password)
@@ -127,18 +128,19 @@ def standard_dns_callback(pkt):
     elif "BOOTP" in layers:
     	print(pkt[Ether].src)
     	mac_addr = str(pkt[Ether].src)
-        #print mac_addr, devices
+        
     	if mac_addr not in devices:
-            # dice = random.randint(0, 1)
-            dice = 0
-            if dice:
-                print 'roll 1, pretend that we get the MUD file'
+            
+            wrpcap("a.pcap", pkt)
+            mud_addr = check_mud("a.pcap")
+            print(mud_addr) 
+            if mud_addr:
                 devices.add(mac_addr)
-                obtainMudProfile('iot_device', mac_addr)
+                print "Obtain MudProfile"
+                obtainMudProfile('iot', mac_addr, mud_addr)
             else:
                 blacklist.add(pkt[Ether].src)
-                print 'roll 0, means we dont have a MUD file'
-                # alert('wh2417@columbia.edu')
+                #alert('wh2417@columbia.edu')
                 print blacklist
                 # iptables -A FORWARD -m mac --mac-source 00:0c:29:27:55:3F -j DROP
                 mac_source = pkt[Ether].src
@@ -149,6 +151,25 @@ def standard_dns_callback(pkt):
 
     else:
         pass
+
+
+def check_mud(pcap_file):
+    with open(pcap_file) as f:
+        pcap = dpkt.pcap.Reader(f)
+        for ts, buf in pcap:
+            eth = dpkt.ethernet.Ethernet(buf)
+            ip = eth.data
+            udp = ip.data
+            dhcp = dpkt.dhcp.DHCP(udp.data)
+
+            for opt in dhcp.opts:
+                if opt[0] == 12: #161
+                    print 'option 53 found'
+                    # It would be nice to use the DHCP message type values in
+                    # the DHCP module, but there doesn't appear to be a convenient
+                    # way to get the comparison to work for both Python2 and Python3.
+                    return opt[1]
+        return False
 
 
 def pktHandler(pkt):

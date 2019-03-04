@@ -10,27 +10,29 @@ from config_ip import implementIPTablesByJson
 import ssl
 
 #Obtain MUD Profile from server based on Device Type
-def obtainMudProfile(device, mac_addr):
+def obtainMudProfile(device, mac_addr, mud_addr):
 
-  if(device == 'iot_device'):
-  	print("SUCCESS")
-	print("log: {0} {1}".format(device, mac_addr))
+    if(device == 'iot'):
+        print("SUCCESS")
+    print("log: {0} {1}".format(device, mac_addr))
 
-  if(device):
-    #send request to API for device's MUD Profile
-    req = urllib2.Request('https://morning-brook-63432.herokuapp.com/api/products/MUDProfile/?device=' + device)
-    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    mud_addr = 'http://lhy.im/api/products/MUDProfile/' + device + '.json'
 
-    result = urllib2.urlopen(req, context = gcontext)
+    if(device):
+        #send request to API for device's MUD Profile
+        req = urllib2.Request(mud_addr)
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
 
-    profile = result.read().decode('utf-8')
+        result = urllib2.urlopen(req, context = gcontext)
 
-    #print(profile)
-    #call config_ip.py's function to implement MUD profile
-    implementIPTablesByJson(profile, mac_addr)
+        profile = result.read().decode('utf-8')
 
-  else:
-    print('name of device is missing')
+        #print(profile)
+        #call config_ip.py's function to implement MUD profile
+        implementIPTablesByJson(profile, mac_addr)
+
+    else:
+        print('name of device is missing')
 
 
 
