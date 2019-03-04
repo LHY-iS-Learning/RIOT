@@ -148,8 +148,10 @@ def standard_dns_callback(pkt):
                 print "Obtain MudProfile"
                 obtainMudProfile('iot', mac_addr, mud_addr)
             else:
+                if not pkt[Ether].src in blacklist:
+                    alert('wh2417@columbia.edu')
+
                 blacklist.add(pkt[Ether].src)
-                #alert('wh2417@columbia.edu')
                 print blacklist
                 # iptables -A FORWARD -m mac --mac-source 00:0c:29:27:55:3F -j DROP
                 mac_source = pkt[Ether].src
@@ -172,8 +174,8 @@ def check_mud(pcap_file):
             dhcp = dpkt.dhcp.DHCP(udp.data)
 
             for opt in dhcp.opts:
-                if opt[0] == 12: #161
-                    print 'option 12 found'
+                if opt[0] == 161: #161
+                    print 'option 161 found'
                     # It would be nice to use the DHCP message type values in
                     # the DHCP module, but there doesn't appear to be a convenient
                     # way to get the comparison to work for both Python2 and Python3.
