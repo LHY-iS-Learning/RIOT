@@ -125,7 +125,9 @@ def alert(useraddr):
         print 'fail to send email'
     finally:
         server.quit()
-
+#simulate source server for now
+SourceServer = dict()
+# SourceServer['00:9D:6B:41:6F:B0'] = 0
 
 #filter for DNS packets only
 def standard_dns_callback(pkt):
@@ -139,7 +141,6 @@ def standard_dns_callback(pkt):
     	mac_addr = str(pkt[Ether].src)
         
     	if mac_addr not in devices:
-            
             wrpcap("a.pcap", pkt)
             mud_addr = check_mud("a.pcap")
             print(mud_addr) 
@@ -147,7 +148,12 @@ def standard_dns_callback(pkt):
                 devices.add(mac_addr)
                 print "Obtain MudProfile"
                 obtainMudProfile('iot', mac_addr, mud_addr)
+            elif SourceServer.get(mac_addr) is not None:
+                #download mud from source server
+                print "download mud file from source server"
+                # pass
             else:
+                print "no MUD, not source server entry"
                 if not pkt[Ether].src in blacklist:
                     alert('wh2417@columbia.edu')
 
@@ -176,11 +182,8 @@ def check_mud(pcap_file):
             for opt in dhcp.opts:
                 if opt[0] == 161: #161
                     print 'option 161 found'
-                    # It would be nice to use the DHCP message type values in
-                    # the DHCP module, but there doesn't appear to be a convenient
-                    # way to get the comparison to work for both Python2 and Python3.
                     return opt[1]
-        return False
+    return False
 
 
 def pktHandler(pkt):
