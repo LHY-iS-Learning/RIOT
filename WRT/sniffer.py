@@ -12,43 +12,11 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
+from update_ip import update_device_domains
 
 import dpkt
 
 #update database when new ACL is detected
-def update_device_domains(device_dict):
-    valid = False
-    port = ''
-    protocol = ''
-    name = device_dict['mac_address']
-    domain = device_dict['domains'][0]['domain'][:-1]
-    query = "SELECT NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = " + "'{0}'".format(name) + " AND DOMAIN = " + "'{0}'".format(domain)
-    answer = cursor.execute(query)
-
-    ips = []
-    for rule in answer.fetchall():
-        ips.append(rule[2])
-        port = rule[3]
-        protocol = rule[4]
-
-
-    if ips:
-        for db_ip in device_dict['domains'][0].get('ips'):
-
-            if db_ip in ips:
-                #No change of ip for domain name
-                pass
-            else:
-                #IP has changed for domain name
-                #automatically implement new set of ip
-                valid = True
-
-    if valid:
-        #drop current rules and implement with new ips
-        print("Updating Rules")
-        #do for loop again for each ip and create matches for each to form overall acl, also get tcp or udp and port
-        update_ipfilter(device_dict, port, protocol, ips)
-        valid = False
 
 
 #expand the packet to check for DNS type
@@ -191,45 +159,8 @@ def pktHandler(pkt):
         standard_dns_callback(pkt)
         # print devices
     except Exception as e:
-        print("Error: filtering for DNS failed")
+        #print("Error: filtering for DNS failed")
         pass
-
-def update_ipfilter(device_dict, port, protocol, ips):
-
-    ip_protocol = str(protocol)
-    source = str(device_dict['ip_address'])
-    target = "ACCEPT"
-    dport = str(port)
-    domain = device_dict['domains'][0]['domain'][:-1]
-
-    #delete old ips from Database
-    mac_source = device_dict['mac_address']
-    # mac_source = 'd0:25:98:ee:22:7f'
-    # mac_source = '88:e9:fe:56:a8:35'
-
-    old_query = "DELETE FROM DEVICE WHERE NAME = '{0}' AND DOMAIN = '{1}'".format(mac_source, domain)
-    cursor.execute(old_query)
-    conn.commit()
-
-    #Remove outdated iptables rules for specific IoT Device and domain endpoint
-    for old_ip in ips:
-        old_dest = old_ip
-        call('iptables -D INPUT -p ' + ip_protocol + ' -d '+ old_dest + ' --dport ' + dport + ' -m mac --mac-source ' + mac_source + ' -j ' + target + '', shell=True)
-
-
-    #Append new iptables rules for specific IoT Device and domain endpoint
-    for db_ip in device_dict['domains'][0].get('ips'):
-        destination = str(db_ip)
-        #print("Source: {0} destination: {1} protocol: {2} port: {3}".format(mac_source, destination, ip_protocol, dport))
-
-        call('iptables -A INPUT -p ' + ip_protocol + ' -d '+ destination + ' --dport ' + dport + ' -m mac --mac-source ' + mac_source + ' -j ' + target + '', shell=True)
-        #update database with new ip
-        query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}')".format(mac_source, str(device_dict['domains'][0]['domain']), destination, dport, ip_protocol)
-
-        cursor.execute(query)
-        conn.commit()
-
-
 
 #check if device database exist
 exists = os.path.exists('device.db')

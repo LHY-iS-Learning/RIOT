@@ -62,7 +62,7 @@ def get_dest_ip(dstName):
             if c.isalpha():
                 res.remove(destIp)
                 break
-                
+
     return res
 
 def parse_info(matches):
@@ -92,6 +92,16 @@ def check_SQL_table():
         print("Main device table created")
         conn.commit() 
 
+def has_dup(cursor, mac_addr, dstName):
+    query = "select NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = '{0}' and DOMAIN = '{1}'".format(mac_addr, dstName)
+    try:
+        res = cursor.execute(query)
+    except Exception as e:
+        print e
+    size = len(res.fetchall())
+    # size != 0, has dup, return true
+    return size != 0
+
 def ACLtoIPTable(acl, mac_addr):
 
     # open database
@@ -112,16 +122,20 @@ def ACLtoIPTable(acl, mac_addr):
 
         # for each dst IP
         print("*********" + dstName + "*************")
-        for dstIp in dstIpList:
-            call('iptables -A FORWARD -p ' + prot + ' -d ' + dstIp + ' --dport ' + dport + ' -m mac --mac-source ' + mac_addr + ' -j ' + target + '', shell=True)
-            print("Implemented rule for: source-> " + mac_addr + " dest-> " + dstIp)
-            print ""
-            query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}')".format(mac_addr, dstName, dstIp, dport, prot)
-            cursor.execute(query)
+        if not has_dup(cursor, mac_addr, dstName):
+            for dstIp in dstIpList:
+                call('iptables -A FORWARD -p ' + prot + ' -d ' + dstIp + ' --dport ' + dport + ' -m mac --mac-source ' + mac_addr + ' -j ' + target + '', shell=True)
+                print("[INFO] Implemented rule for: source-> " + mac_addr + " dest-> " + dstIp)
+                print ""
+                query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}')".format(mac_addr, dstName, dstIp, dport, prot)
+                cursor.execute(query)
+                conn.commit()
+        else:
+            print("[INFO] Rules exist for source-> " + mac_addr + " dest-> " + dstName)
         print("**********************")
     
+    #call ('iptables -I FORWARD -d 17.142.160.59 -j DROP', shell=True)
     call('iptables -A FORWARD -m mac --mac-source ' + mac_addr + ' -j DROP' + '', shell=True)
-    conn.commit()
-
+    conn.close()
 
 
