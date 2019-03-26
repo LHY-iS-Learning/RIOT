@@ -21,8 +21,6 @@ def update_device_domains(device_dict):
     port = ''
     protocol = ''
     name = device_dict['mac_address']
-    # name = 'd0:25:98:ee:22:7f'
-    # name = '88:e9:fe:56:a8:35'
     domain = device_dict['domains'][0]['domain'][:-1]
     query = "SELECT NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = " + "'{0}'".format(name) + " AND DOMAIN = " + "'{0}'".format(domain)
     answer = cursor.execute(query)
@@ -32,6 +30,7 @@ def update_device_domains(device_dict):
         ips.append(rule[2])
         port = rule[3]
         protocol = rule[4]
+
 
     if ips:
         for db_ip in device_dict['domains'][0].get('ips'):
@@ -90,7 +89,7 @@ def dns_callback(pkt):
 
 
         except Exception as e:
-            print("Error: Unable to parse DNS ans packet")
+            # print("Error: Unable to parse DNS ans packet")
             return
 
 #send alert email to user
@@ -137,7 +136,7 @@ def standard_dns_callback(pkt):
         dns_callback(pkt)
 
     elif "BOOTP" in layers:
-    	print(pkt[Ether].src)
+    	print("BOOTP: " + pkt[Ether].src)
     	mac_addr = str(pkt[Ether].src)
         
     	if mac_addr not in devices:
@@ -155,10 +154,11 @@ def standard_dns_callback(pkt):
             else:
                 print "no MUD, not source server entry"
                 if not pkt[Ether].src in blacklist:
+                    pass
                     alert('wh2417@columbia.edu')
 
                 blacklist.add(pkt[Ether].src)
-                print blacklist
+                # print blacklist
                 # iptables -A FORWARD -m mac --mac-source 00:0c:29:27:55:3F -j DROP
                 mac_source = pkt[Ether].src
                 call('iptables -A FORWARD  -m mac --mac-source ' + mac_source + ' -j DROP' + '', shell=True)
@@ -180,8 +180,8 @@ def check_mud(pcap_file):
             dhcp = dpkt.dhcp.DHCP(udp.data)
 
             for opt in dhcp.opts:
-                if opt[0] == 161: #161
-                    print 'option 161 found'
+                if opt[0] == 12: #161
+                    print opt[1]
                     return opt[1]
     return False
 

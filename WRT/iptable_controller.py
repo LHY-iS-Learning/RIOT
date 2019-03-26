@@ -6,7 +6,7 @@ import sys
 import json
 import os
 import urllib2
-from config_ip import implementIPTablesByJson
+from fetch_ip import implementIPTablesByJson
 import ssl
 
 #Obtain MUD Profile from server based on Device Type
@@ -38,4 +38,4 @@ def obtainMudProfile(device, mac_addr, mud_addr):
 
 
 if __name__ == "__main__":
-    obtainMudProfile('camera', '192.168.1.120')
+    obtainMudProfile('iot', '70:ef:00:92:81:22', 's')

@@ -12,6 +12,12 @@ import sqlite3
 
 #Manually inserting MUD Profile
 def implementIPTables(file):
+    print("**********************")
+    print("!")
+    print("!")
+    print("!")
+    print("!")
+    print("**********************")
     #obtain desired MUD-like object to parse.
     try:
         mudfile = open(file, 'r').read()
@@ -141,7 +147,6 @@ def ACLtoIPTable(acl, mac_addr):
         query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}')".format(name, dest_name, destination, dport, protocol)
 
 
-        print(query)
         cursor.execute(query)
         conn.commit()
 
