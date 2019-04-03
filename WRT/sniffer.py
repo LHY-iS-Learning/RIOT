@@ -13,6 +13,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
 from update_ip import update_device_domains
+from IoT_Classification import get_device_dhcp_info
 
 import dpkt
 
@@ -104,35 +105,41 @@ def standard_dns_callback(pkt):
         dns_callback(pkt)
 
     elif "BOOTP" in layers:
-    	print("BOOTP: " + pkt[Ether].src)
-    	mac_addr = str(pkt[Ether].src)
-        
-    	if mac_addr not in devices:
-            wrpcap("a.pcap", pkt)
-            mud_addr = check_mud("a.pcap")
-            print(mud_addr) 
-            if mud_addr:
-                devices.add(mac_addr)
-                print "Obtain MudProfile"
-                obtainMudProfile('iot', mac_addr, mud_addr)
-            elif SourceServer.get(mac_addr) is not None:
-                #download mud from source server
-                print "download mud file from source server"
-                # pass
-            else:
-                print "no MUD, not source server entry"
-                if not pkt[Ether].src in blacklist:
-                    pass
-                    alert('wh2417@columbia.edu')
+        features = get_device_dhcp_info(pkt)
+        if not features['IoT']:
+            # General Purpose device
+            print("[INFO] " + str(features))
+            
+        else:
+            print("BOOTP: " + pkt[Ether].src)
+            mac_addr = str(pkt[Ether].src)
+            
+            if mac_addr not in devices:
+                wrpcap("a.pcap", pkt)
+                mud_addr = check_mud("a.pcap")
+                print(mud_addr) 
+                if mud_addr:
+                    devices.add(mac_addr)
+                    print "Obtain MudProfile"
+                    obtainMudProfile('iot', mac_addr, mud_addr)
+                elif SourceServer.get(mac_addr) is not None:
+                    #download mud from source server
+                    print "download mud file from source server"
+                    # pass
+                else:
+                    print "no MUD, not source server entry"
+                    if not pkt[Ether].src in blacklist:
+                        pass
+                        alert('wh2417@columbia.edu')
 
-                blacklist.add(pkt[Ether].src)
-                # print blacklist
-                # iptables -A FORWARD -m mac --mac-source 00:0c:29:27:55:3F -j DROP
-                mac_source = pkt[Ether].src
-                call('iptables -A FORWARD  -m mac --mac-source ' + mac_source + ' -j DROP' + '', shell=True)
-                print 'drop packets for mac:' + mac_source
-    	else:
-    	    pass
+                    blacklist.add(pkt[Ether].src)
+                    # print blacklist
+                    # iptables -A FORWARD -m mac --mac-source 00:0c:29:27:55:3F -j DROP
+                    mac_source = pkt[Ether].src
+                    call('iptables -A FORWARD  -m mac --mac-source ' + mac_source + ' -j DROP' + '', shell=True)
+                    print 'drop packets for mac:' + mac_source
+            else:
+                pass
 
     else:
         pass

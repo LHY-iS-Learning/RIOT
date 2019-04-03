@@ -25,7 +25,8 @@ def update_device_domains(device_dict):
     protocol = ''
 
     rules = answer.fetchall()
-    print "[INFO] " + name + " " + str(len(rules)) + " IPs for domain " + domain + " in the database"
+    if len(rules):
+        print "[INFO] " + name + " " + str(len(rules)) + " IPs for domain " + domain + " in the database"
     if rules:
         for rule in rules:
             ipList.append(rule[2])
