@@ -6,6 +6,7 @@ import socket
 import os
 from subprocess import Popen, PIPE, call
 import sqlite3
+import dns.resolver
 
 def implementIPTablesByJson(file, mac_addr):
     #obtain desired MUD-like object to parse.
@@ -51,18 +52,18 @@ def get_destName(matches, dnsName):
     return matches["ipv4"][dnsName][:-1]
 
 def get_dest_ip(dstName):
-    p = Popen(['dig', '+short', dstName], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+    A = dns.resolver.query(dstName, 'A')
 
-    destIpList = output.split('\n')[:-1]
     res = []
-    for destIp in destIpList:
-        res.append(destIp)
-        for c in destIp:
-            if c.isalpha():
-                res.remove(destIp)
-                break
-
+    for i in A.response.answer:
+        for j in i.items:
+            if j.rdtype == 1:
+                destIp = j.address
+                res.append(destIp)
+                for c in destIp:
+                    if c.isalpha():
+                        res.remove(destIp)
+                        break
     return res
 
 def parse_info(matches):
@@ -93,9 +94,9 @@ def check_SQL_table():
         conn.commit() 
 
 def has_dup(cursor, mac_addr, dstName):
-    query = "select NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = '{0}' and DOMAIN = '{1}'".format(mac_addr, dstName)
+    query = "select NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = ? and DOMAIN = ?"
     try:
-        res = cursor.execute(query)
+        res = cursor.execute(query, [mac_addr, dstName])
     except Exception as e:
         print e
     size = len(res.fetchall())
@@ -118,7 +119,10 @@ def ACLtoIPTable(acl, mac_addr):
            "ietf-acldns:dst-dnsname" not in matches["ipv4"]):
             continue
 
-        prot, dport, dstIpList, target, dstName = parse_info(matches)
+        try:
+            prot, dport, dstIpList, target, dstName = parse_info(matches)
+        except Exception as e:
+            print e
 
         # for each dst IP
         print("*********" + dstName + "*************")
@@ -127,9 +131,12 @@ def ACLtoIPTable(acl, mac_addr):
                 call('iptables -A FORWARD -p ' + prot + ' -d ' + dstIp + ' --dport ' + dport + ' -m mac --mac-source ' + mac_addr + ' -j ' + target + '', shell=True)
                 print("[INFO] Implemented rule for: source-> " + mac_addr + " dest-> " + dstIp)
                 print ""
-                query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}')".format(mac_addr, dstName, dstIp, dport, prot)
-                cursor.execute(query)
-                conn.commit()
+                try:
+                    query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES(?,?,?,?,?)"
+                    cursor.execute(query, (mac_addr, dstName, dstIp, dport, prot))
+                    conn.commit()
+                except Exception as e:
+                    print e
         else:
             print("[INFO] Rules exist for source-> " + mac_addr + " dest-> " + dstName)
         print("**********************")

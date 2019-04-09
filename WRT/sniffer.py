@@ -105,19 +105,19 @@ def standard_dns_callback(pkt):
         dns_callback(pkt)
 
     elif "BOOTP" in layers:
-        features = get_device_dhcp_info(pkt)
-        if not features['IoT']:
+        #features = get_device_dhcp_info(pkt)
+        if False:
             # General Purpose device
             print("[INFO] " + str(features))
             
         else:
             print("BOOTP: " + pkt[Ether].src)
             mac_addr = str(pkt[Ether].src)
-            
+
             if mac_addr not in devices:
                 wrpcap("a.pcap", pkt)
                 mud_addr = check_mud("a.pcap")
-                print(mud_addr) 
+                
                 if mud_addr:
                     devices.add(mac_addr)
                     print "Obtain MudProfile"
