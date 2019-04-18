@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+            <th scope="col">MAC addr</th>
+            <th scope="col">Domain</th>
+            <th scope="col">IP</th>
+            <!-- <th scope="col">Action</th> -->
+        </thead>
+        <tbody>
+          <meta charset="UTF-8">
+          {% for row in rows %}
+            <tr>
+                <td>{{ row["name"] }}</td>
+                <td>{{ row["domain"] }}</td>
+                <td>{{ row["ip"] }}</td>
+                <!-- <td>
+                    <form action="{{ url_for('block') }}" method="POST">
+                        <input id={{row["name"]}} name={{row["name"]}} type="hidden" value = {{row["ip"]}}>
+                        <button type="submit"> block </button>
+                    </form>
+                </td> -->
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
