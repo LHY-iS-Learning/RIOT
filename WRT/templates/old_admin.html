@@ -1,0 +1,39 @@
+<html>
+<head> 
+    <title>WRT admin page</title>
+</head>
+
+<body>
+    <table border = 1>
+        <thead>
+            <td> MAC addr </td>
+            <td> domain </td>
+            <td> ip </td>
+            <td> Action </td>
+        </thead>
+
+        {% for row in rows %}
+        <tr>
+            <td>{{row["name"]}}</td>
+            <td>{{row["domain"]}}</td>
+            <td>{{row["ip"]}}</td>
+            <td> 
+                <form action="{{ url_for('block') }}" method="POST">
+                    <input id={{row["name"]}} name={{row["name"]}} type="hidden" value = {{row["ip"]}}>
+                    <button type="submit"> block </button>
+                </form>
+                <form action="{{ url_for('allow') }}" method="POST">
+                    <input id={{row["name"]}} name={{row["name"]}} type="hidden" value = {{row["ip"]}}>
+                    <button type="submit"> allow </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</body>
+
+
+
+</html>

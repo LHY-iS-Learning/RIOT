@@ -18,7 +18,7 @@ def alert(useraddr):
     <html>
         <h1>FAIL to find a MUD for this device</h1>
         <p> Go to the router address </p>
-        <a href = '192.168.2.1'> My router </a>
+        <a href = 'http://192.168.2.1:5000/'> My router </a>
     </html>
     '''
     # msg = MIMEText('FAIL to find a MUD for this device', 'plain', 'utf-8')

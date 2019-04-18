@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+            <th scope="col">MAC addr</th>
+        </thead>
+        <tbody>
+          <meta charset="UTF-8">
+          {% for row in rows %}
+            <tr>
+                <td>{{ row["mac"] }}</td>
+                <td>
+                    <form action="{{ url_for('allow') }}" method="POST">
+                        <input id={{row["mac"]}} name={{row["mac"]}} type="hidden" value = {{row["mac"]}}>
+                        <button type="submit"> Allow </button>
+                    </form>
+                </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

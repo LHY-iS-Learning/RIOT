@@ -9,7 +9,7 @@ from update_ip import update_device_domains
 from IoT_Classification import get_device_dhcp_info
 
 # monitor network flow list
-DELTA_TIME = datetime.timedelta(minutes = 1)
+DELTA_TIME = datetime.timedelta(seconds = 1)
 monitor_device = {}
 temp_black_list = set()
 
@@ -23,7 +23,7 @@ def check_mud(pcap_file):
             dhcp = dpkt.dhcp.DHCP(udp.data)
 
             for opt in dhcp.opts:
-                if opt[0] == 161: #161
+                if opt[0] == 12: #161
                     print opt[1]
                     return opt[1]
     return False
@@ -46,6 +46,17 @@ def pktHandler(pkt):
 
                 call('iptables -A FORWARD  -m mac --mac-source ' + mac_addr + ' -j DROP' + '', shell=True)
                 print 'drop packets for mac:' + mac_addr
+                
+                try:
+                    alert('wh2417@columbia.edu')
+                    update_suspicious(mac_addr)
+                except Exception as e:
+                    print e
+                print "[INFO] send email to user"
+
+                temp_black_list.remove(mac_addr)
+                monitor_device.pop(mac_addr)
+
         else:
             standard_dns_callback(pkt)
     except:
@@ -109,13 +120,29 @@ def search_mud_file(pkt):
 
         # Create a pcap file, monitor for one hour and send to server
         create_pcap_file(pkt)
+        print "[INFO] Successfully generate a mud like file" 
 
-        if not pkt[Ether].src in blacklist:
-            pass
-            alert('wh2417@columbia.edu')
+        # if not pkt[Ether].src in blacklist:
+        #     pass
+        #     update_suspicious(mac_addr)
+        #     alert('wh2417@columbia.edu')
 
-        blacklist.add(pkt[Ether].src)
+        # blacklist.add(pkt[Ether].src)
         # print blacklist
+
+def update_suspicious(mac_addr):
+    try:
+        conn = sqlite3.connect("device.db")
+    except:
+        print "[ERROR] Fail to connect to database"
+
+    cursor = conn.cursor()
+    query = "INSERT INTO SUSPICIOUS(MAC) VALUES(?)"
+    cursor.execute(query, (mac_addr,))
+    conn.commit()
+    conn.close()
+
+
 
 
 def create_pcap_file(pkt):
