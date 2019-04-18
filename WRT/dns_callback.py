@@ -175,8 +175,9 @@ def dns_callback(pkt):
             response.append(pkt[DNSRR][x].rdata)
 
         try:
-            create_device_dic(pkt, response)
+            device_dict = create_device_dic(pkt, response)
             update_device_domains(device_dict)
+
         except Exception as e:
             # print("Error: Unable to parse DNS ans packet")
             return
@@ -196,6 +197,7 @@ def create_device_dic(pkt, response):
     domains.append(domain_dict)
 
     device_dict['domains'] = domains
+    return device_dict
 
 #expand the packet to check for DNS type
 def layer_expand(packet):
