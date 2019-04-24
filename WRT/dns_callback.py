@@ -23,12 +23,25 @@ def check_mud(pcap_file):
             dhcp = dpkt.dhcp.DHCP(udp.data)
 
             for opt in dhcp.opts:
-                if opt[0] == 12: #161
+                if opt[0] == 161: #161
                     print opt[1]
                     return opt[1]
     return False
 
+def get_hostname(pcap_file):
+    with open(pcap_file) as f:
+        pcap = dpkt.pcap.Reader(f)
+        for ts, buf in pcap:
+            eth = dpkt.ethernet.Ethernet(buf)
+            ip = eth.data
+            udp = ip.data
+            dhcp = dpkt.dhcp.DHCP(udp.data)
 
+            for opt in dhcp.opts:
+                if opt[0] == 12:
+                    print opt[1]
+                    return opt[1]
+    return '***'
 
 def pktHandler(pkt):
     try:
@@ -49,7 +62,7 @@ def pktHandler(pkt):
                 
                 try:
                     alert('wh2417@columbia.edu')
-                    update_suspicious(mac_addr)
+                    # update_suspicious(mac_addr)
                 except Exception as e:
                     print e
                 print "[INFO] send email to user"
@@ -105,6 +118,7 @@ def search_mud_file(pkt):
     wrpcap("a.pcap", pkt)
     mud_addr = check_mud("a.pcap")
     mac_addr = str(pkt[Ether].src)
+    hostname = get_hostname("a.pcap")
 
     if mud_addr:
         devices.add(mac_addr)
@@ -120,6 +134,9 @@ def search_mud_file(pkt):
 
         # Create a pcap file, monitor for one hour and send to server
         create_pcap_file(pkt)
+
+        update_suspicious(mac_addr, hostname)
+
         print "[INFO] Successfully generate a mud like file" 
 
         # if not pkt[Ether].src in blacklist:
@@ -130,15 +147,15 @@ def search_mud_file(pkt):
         # blacklist.add(pkt[Ether].src)
         # print blacklist
 
-def update_suspicious(mac_addr):
+def update_suspicious(mac_addr, hostname):
     try:
         conn = sqlite3.connect("device.db")
     except:
         print "[ERROR] Fail to connect to database"
 
     cursor = conn.cursor()
-    query = "INSERT INTO SUSPICIOUS(MAC) VALUES(?)"
-    cursor.execute(query, (mac_addr,))
+    query = "INSERT INTO SUSPICIOUS(MAC, HOSTNAME) VALUES(?, ?)"
+    cursor.execute(query, (mac_addr, hostname))
     conn.commit()
     conn.close()
 

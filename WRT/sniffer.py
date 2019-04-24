@@ -21,8 +21,8 @@ else:
     conn = sqlite3.connect('device.db')
     print("Database has been created")
     conn.execute('CREATE TABLE DEVICE (NAME CHAR(20) NOT NULL, DOMAIN CHAR(50) NOT NULL, IP CHAR(20) NOT NULL, PORT CHAR(20) NOT NULL, PROTOCOL CHAR(20) NOT NULL);')
-    conn.execute('CREATE TABLE SUSPICIOUS (MAC CHAR(20) NOT NULL UNIQUE);')
-    conn.execute('CREATE TABLE BLOCKED (MAC CHAR(20) NOT NULL UNIQUE);')
+    conn.execute('CREATE TABLE SUSPICIOUS (MAC CHAR(20) NOT NULL UNIQUE, HOSTNAME CHAR(20) NOT NULL);')
+    conn.execute('CREATE TABLE BLOCKED (MAC CHAR(20) NOT NULL UNIQUE, HOSTNAME CHAR(20) NOT NULL);')
     print("Main device table created")
 
 

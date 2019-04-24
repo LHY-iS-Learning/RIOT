@@ -70,9 +70,10 @@ def block():
 @app.route('/keep_block', methods = ['GET', 'POST'])
 def keep_block():
     mac_addr = request.form.keys()[0]
+    hostname = request.form.values()[0]
     print "keep blocking "+ mac_addr
     delete_from_suspicious(mac_addr)
-    insert_into_blocked(mac_addr)
+    insert_into_blocked(mac_addr, hostname)
     return redirect(url_for('admin'))
 
 @app.route('/allow_page', methods = ['GET', 'POST'])
@@ -108,15 +109,15 @@ def delete_from_suspicious(mac_addr):
     conn.commit()
     conn.close()
 
-def insert_into_blocked(mac_addr):
+def insert_into_blocked(mac_addr, hostname = '***'):
     try:
         conn = sqlite3.connect("device.db")
     except:
         print "[ERROR] Fail to connect to database"
 
     cursor = conn.cursor()
-    query = "INSERT INTO BLOCKED(MAC) VALUES(?)"
-    cursor.execute(query, (mac_addr,))
+    query = "INSERT INTO BLOCKED(MAC, HOSTNAME) VALUES(?, ?)"
+    cursor.execute(query, (mac_addr, hostname))
     conn.commit()
     conn.close()
 
