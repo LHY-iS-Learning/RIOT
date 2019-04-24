@@ -47,16 +47,20 @@ def pktHandler(pkt):
     try:
         mac_addr = str(pkt[Ether].src)
         if mac_addr in monitor_device.keys() and mac_addr not in temp_black_list:
+            fileName = mac_addr.replace(':',"-")
             if datetime.datetime.now() < monitor_device[mac_addr]:
                 print("[INFO] Keep monitoring " + mac_addr)
-                wrpcap(mac_addr+".pcap", pkt, append=True)
+                wrpcap(fileName+".pcap", pkt, append=True)
             else:
                 print("[INFO] Finish monitor " + mac_addr)
                 temp_black_list.add(mac_addr)
 
                 # to-do: send to server
-
-
+                try:
+                    call("scp -i ~/.ssh/id_rsa " + fileName + ".pcap mud_server@192.168.2.118:/home/mud_server/Desktop/RouterSend/" + fileName + ".pcap", shell=True)
+                except Exception as e:
+                    print "Error when send to MUD_Server", str(e)
+                    
                 call('iptables -A FORWARD  -m mac --mac-source ' + mac_addr + ' -j DROP' + '', shell=True)
                 print 'drop packets for mac:' + mac_addr
                 
