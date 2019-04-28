@@ -4,6 +4,7 @@ from flask import request, redirect, url_for
 from flask_bootstrap import Bootstrap
 import sqlite3
 from subprocess import call
+from iptable_controller import obtainMudProfile
 
 app = Flask(__name__)
 bootstrap = Bootstrap(app)
@@ -79,11 +80,26 @@ def keep_block():
 @app.route('/allow_page', methods = ['GET', 'POST'])
 def allow():
     mac_addr = request.form.keys()[0]
-    # ip = request.form.values()[0]
+    hostname = request.form.values()[0]
     # print "allowing {ip} for {mac}".format(ip = ip, mac = mac_addr)
-    print "allowing " + mac_addr
+    print "allowing " + mac_addr + " hostname is :" + hostname
+
+    #delete iptables block and delete from blocked table
     iptables_delete(mac_addr)
     delete_from_blocked(mac_addr)
+
+    #get new mud file and parse it into acl
+    filename = hostname + '%23' + mac_addr.replace(':', '-')
+    mud_addr = 'http://192.168.2.118/monitored/' + filename + '.json'
+    #use hostname for device name for now
+    device = hostname
+    try:
+        obtainMudProfile(device, mac_addr, mud_addr)
+    except Exception as e:
+        print mud_addr
+        print "something go wrong in web sever acl part"
+        print e
+
     return redirect(url_for('admin'))
 
 def iptables_delete(mac_addr):
