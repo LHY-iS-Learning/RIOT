@@ -7,6 +7,7 @@ import os
 from subprocess import Popen, PIPE, call
 import sqlite3
 import dns.resolver
+from dns_callback import get_hostname
 
 def implementIPTablesByJson(file, mac_addr):
     #obtain desired MUD-like object to parse.
@@ -66,7 +67,7 @@ def get_dest_ip(dstName):
                         break
     return res
 
-def parse_info(matches):
+def parse_info(matches, mac_addr):
     # get dst or src
     # pre-process
     dnsName = dst_or_src_dnsname(matches)
@@ -76,7 +77,14 @@ def parse_info(matches):
     dstName = get_destName(matches, dnsName[0])
     dstIpList = get_dest_ip(dstName)
 
-    return prot, dport, dstIpList, dstName
+    try:
+        hostName = get_hostname(mac_addr.replace(":","-") + ".pcap")
+    except Exception as e:
+        print "[ERROR] Error at fetch_ip.py line 83, unable to get hostName" + e.message
+        print "Set hostName = cannot-find-name"
+        hostName = "cannot-find-name"
+
+    return prot, dport, dstIpList, dstName, hostName
 
 def check_SQL_table():
     #configure database and connect
@@ -127,7 +135,7 @@ def ACLtoIPTable(acl, mac_addr):
                 print e
 
             try:
-                prot, dport, dstIpList, dstName = parse_info(matches)
+                prot, dport, dstIpList, dstName, hostName = parse_info(matches, mac_addr)
             except Exception as e:
                 print "[ERROR] Error at parse_info"
                 print e

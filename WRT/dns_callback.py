@@ -13,6 +13,7 @@ DELTA_TIME = datetime.timedelta(seconds = 1)
 monitor_device = {}
 temp_black_list = set()
 
+
 def check_mud(pcap_file):
     with open(pcap_file) as f:
         pcap = dpkt.pcap.Reader(f)
@@ -113,8 +114,10 @@ def standard_dns_callback(pkt):
         if not features['IoT']:
             # General Purpose device
             print("[INFO] " + str(features))
+            print("[INFO] General Purpose Device, allow any any.")
             
         else:
+            print("[INFO] " + str(features))
             print("BOOTP: " + pkt[Ether].src)
             mac_addr = str(pkt[Ether].src)
 
@@ -190,6 +193,7 @@ def create_pcap_file(pkt):
         wrpcap(hostname+"#"+fileName, pkt)
         end_time = datetime.datetime.now() + DELTA_TIME
         monitor_device[mac_addr] = end_time
+        print "[INFO] pcap file created for monitoring purpose: " + fileName 
         return True
     except Exception as e:
         print "Line 121"
