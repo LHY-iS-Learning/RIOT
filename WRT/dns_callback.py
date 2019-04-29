@@ -117,7 +117,6 @@ def standard_dns_callback(pkt):
             print("[INFO] General Purpose Device, allow any any.")
             
         else:
-            print("[INFO] " + str(features))
             print("BOOTP: " + pkt[Ether].src)
             mac_addr = str(pkt[Ether].src)
 
