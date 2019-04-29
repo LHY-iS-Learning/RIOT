@@ -218,6 +218,7 @@ def dns_callback(pkt):
 
         try:
             device_dict = create_device_dic(pkt, response)
+            #print "--------------->device_dict: " +  str(device_dict)
             update_device_domains(device_dict)
 
         except Exception as e:

@@ -15,8 +15,7 @@ def update_device_domains(device_dict):
 
     name = device_dict['mac_address']
     domain = device_dict['domains'][0]['domain'][:-1]
-    if domain[:4] == "www.":
-        domain = domain[4:]
+
     query = "SELECT NAME, HOSTNAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = " + "'{0}'".format(name) + " AND DOMAIN = " + "'{0}'".format(domain)
     answer = cursor.execute(query)
 
