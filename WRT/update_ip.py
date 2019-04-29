@@ -17,21 +17,23 @@ def update_device_domains(device_dict):
     domain = device_dict['domains'][0]['domain'][:-1]
     if domain[:4] == "www.":
         domain = domain[4:]
-    query = "SELECT NAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = " + "'{0}'".format(name) + " AND DOMAIN = " + "'{0}'".format(domain)
+    query = "SELECT NAME, HOSTNAME, DOMAIN, IP, PORT, PROTOCOL from DEVICE WHERE NAME = " + "'{0}'".format(name) + " AND DOMAIN = " + "'{0}'".format(domain)
     answer = cursor.execute(query)
 
     ipList = []
     port = ''
     protocol = ''
+    hostName = ''
 
     rules = answer.fetchall()
     if len(rules):
         print "[INFO] " + name + " " + str(len(rules)) + " IPs for domain " + domain + " in the database"
     if rules:
         for rule in rules:
-            ipList.append(rule[2])
-            port = rule[3]
-            protocol = rule[4]
+            hostName = rule[1]
+            ipList.append(rule[3])
+            port = rule[4]
+            protocol = rule[5]
         
         newIpList = get_dest_ip(domain)
 
@@ -39,11 +41,11 @@ def update_device_domains(device_dict):
             print "[INFO] IPs for domain {0} stay the same, do not change iptables".format(domain)
         else:
             print "[INFO] Start Updating Rules for domain {0}".format(domain)
-            update_iptable(ipList, newIpList, str(port), str(protocol).upper(), domain, name)
+            update_iptable(ipList, newIpList, str(port), str(protocol).upper(), domain, name, hostName)
 
     conn.close()
 
-def update_iptable(ipList, newIpList, port, protocol, domain, mac_addr):
+def update_iptable(ipList, newIpList, port, protocol, domain, mac_addr, hostName):
     # clear databse for the domain
     conn = sqlite3.connect('device.db')
     cursor = conn.cursor()
@@ -62,7 +64,7 @@ def update_iptable(ipList, newIpList, port, protocol, domain, mac_addr):
         call('iptables -I FORWARD -p ' + protocol + ' -d '+ newIp + ' --dport ' + port + ' -m mac --mac-source ' + mac_addr + ' -j ACCEPT', shell=True)
         print "[INFO] Add new IP {0} to iptables".format(newIp)
         # database
-        query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}')".format(mac_addr, domain, newIp, port, protocol)
+        query = "INSERT INTO DEVICE(NAME, HOSTNAME, DOMAIN, IP, PORT, PROTOCOL) VALUES('{0}','{1}','{2}','{3}','{4}', '{5}')".format(mac_addr, hostName, domain, newIp, port, protocol)
         cursor.execute(query)
         conn.commit()
         print "[INFO] Add new IP {0} to database".format(newIp)

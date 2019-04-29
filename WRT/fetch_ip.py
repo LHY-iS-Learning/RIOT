@@ -95,7 +95,7 @@ def check_SQL_table():
         #create db and insert main schema
         conn = sqlite3.connect('device.db')
         print("Database has been created")
-        conn.execute('CREATE TABLE DEVICE (NAME CHAR(20) NOT NULL, DOMAIN CHAR(50) NOT NULL, IP CHAR(20) NOT NULL, PORT CHAR(20) NOT NULL, PROTOCOL CHAR(20) NOT NULL);')
+        conn.execute('CREATE TABLE DEVICE (NAME CHAR(20) NOT NULL, HOSTNAME CHAR(20) NOT NULL, DOMAIN CHAR(50) NOT NULL, IP CHAR(20) NOT NULL, PORT CHAR(20) NOT NULL, PROTOCOL CHAR(20) NOT NULL);')
         print("Main device table created")
         conn.commit() 
 
@@ -148,8 +148,8 @@ def ACLtoIPTable(acl, mac_addr):
                     print("[INFO] Implemented rule for: source-> " + mac_addr + " dest-> " + dstIp)
                     print ""
                     try:
-                        query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES(?,?,?,?,?)"
-                        cursor.execute(query, (mac_addr, dstName, dstIp, dport, prot))
+                        query = "INSERT INTO DEVICE(NAME, HOSTNAME, DOMAIN, IP, PORT, PROTOCOL) VALUES(?,?,?,?,?,?)"
+                        cursor.execute(query, (mac_addr, hostName, dstName, dstIp, dport, prot))
                         conn.commit()
                     except Exception as e:
                         print e
