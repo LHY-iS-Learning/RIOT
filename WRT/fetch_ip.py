@@ -49,7 +49,7 @@ def get_prot(matches, dnsName):
     return prot, dport
 
 def get_destName(matches, dnsName):
-    return matches["ipv4"][dnsName][:-1]
+    return matches["ipv4"][dnsName]
 
 def get_dest_ip(dstName):
     A = dns.resolver.query(dstName, 'A')
@@ -111,35 +111,42 @@ def ACLtoIPTable(acl, mac_addr):
     print("Database is running")
     cursor = conn.cursor()
 
-    ace = acl[0]["aces"]
-    for index in ace:
-        matches = index["matches"]
-            #Confirm that matches has valid info for dest addr
-        if("ietf-acldns:src-dnsname" not in matches["ipv4"] and \
-           "ietf-acldns:dst-dnsname" not in matches["ipv4"]):
-            continue
+    try:
+        ace = acl[0]["aces"]['ace']
+        for index in ace:
+            matches = index["matches"]
+            print "------> matches: " + str(matches)
+                #Confirm that matches has valid info for dest addr
+            if("ietf-acldns:src-dnsname" not in matches["ipv4"] and \
+            "ietf-acldns:dst-dnsname" not in matches["ipv4"]):
+                continue
 
-        try:
-            prot, dport, dstIpList, target, dstName = parse_info(matches)
-        except Exception as e:
-            print e
+            try:
+                prot, dport, dstIpList, target, dstName = parse_info(matches)
+            except Exception as e:
+                print "Error at parse_info"
+                print e
 
-        # for each dst IP
-        print("*********" + dstName + "*************")
-        if not has_dup(cursor, mac_addr, dstName):
-            for dstIp in dstIpList:
-                call('iptables -A FORWARD -p ' + prot + ' -d ' + dstIp + ' --dport ' + dport + ' -m mac --mac-source ' + mac_addr + ' -j ' + target + '', shell=True)
-                print("[INFO] Implemented rule for: source-> " + mac_addr + " dest-> " + dstIp)
-                print ""
-                try:
-                    query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES(?,?,?,?,?)"
-                    cursor.execute(query, (mac_addr, dstName, dstIp, dport, prot))
-                    conn.commit()
-                except Exception as e:
-                    print e
-        else:
-            print("[INFO] Rules exist for source-> " + mac_addr + " dest-> " + dstName)
-        print("**********************")
+            # for each dst IP
+            print("*********" + dstName + "*************")
+            if not has_dup(cursor, mac_addr, dstName):
+                for dstIp in dstIpList:
+                    call('iptables -A FORWARD -p ' + prot + ' -d ' + dstIp + ' --dport ' + dport + ' -m mac --mac-source ' + mac_addr + ' -j ' + target + '', shell=True)
+                    print("[INFO] Implemented rule for: source-> " + mac_addr + " dest-> " + dstIp)
+                    print ""
+                    try:
+                        query = "INSERT INTO DEVICE(NAME, DOMAIN, IP, PORT, PROTOCOL) VALUES(?,?,?,?,?)"
+                        cursor.execute(query, (mac_addr, dstName, dstIp, dport, prot))
+                        conn.commit()
+                    except Exception as e:
+                        print e
+            else:
+                print("[INFO] Rules exist for source-> " + mac_addr + " dest-> " + dstName)
+            print("**********************")
+    except Exception as e:
+        print "Some MUD Files use \'ace\' and some use \'aces\'"
+        print "Check mud file format"
+        print e
     
     #call ('iptables -I FORWARD -d 17.142.160.59 -j DROP', shell=True)
     call('iptables -A FORWARD -m mac --mac-source ' + mac_addr + ' -j DROP' + '', shell=True)

@@ -49,8 +49,8 @@ def get_device_dhcp_info(pkt):
     except Exception as e:
         print e
 
-    if features['mac_address'] != pkt.src:
-        print('Src mac address mismatches with DHCP messages')
+    #if features['mac_address'] != pkt.src:
+    #    print('Src mac address mismatches with DHCP messages')
     
     try:
         options = pkt[BOOTP][DHCP].options
@@ -64,17 +64,17 @@ def get_device_dhcp_info(pkt):
             opt_name = option[0]
             opt_value = option[1]
             if opt_name == 'param_req_list':
-                # for b in str(opt_value):
-                #     req_list.append(ord(b))
-                t, v = query_fingerbank(req_list, 55)
+                #for b in str(opt_value):
+                #    req_list.append(ord(b))
+                t, v = query_fingerbank(opt_value, 55)
                 if t == "Operating System":
                     features['os'] = v
                     if (v.find('Apple OS') != -1) or (v.find('Windows OS') != -1):
                         features['IoT']= False
-                    print(v + " detected from DHCP option 55")
+                    print("[INFO] " + v + " detected from DHCP option 55")
                 else :
                     if t != "":
-                        print(v + " detected from DHCP option 55")
+                        print("[INFO] " + v + " detected from DHCP option 55")
                         features['device_type'] = v
                         if (v.find('Printer') != -1):
                             features['IoT'] = True
@@ -85,10 +85,10 @@ def get_device_dhcp_info(pkt):
                     features['os'] = v
                     if (v.find('Apple OS') != -1) or (v.find('Windows OS') != -1):
                         features['IoT']= False
-                    print(v + " detected from DHCP option 60")
+                    print("[INFO] " + v + " detected from DHCP option 60")
                 else:
                     if t != "":
-                        print(v + " detected from DHCP option 60")
+                        print("[INFO] " + v + " detected from DHCP option 60")
                         features['device_type'] = v
                         if (v.find('Printer') != -1):
                             features['IoT'] = True

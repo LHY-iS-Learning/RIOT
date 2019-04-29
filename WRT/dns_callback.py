@@ -41,13 +41,20 @@ def get_hostname(pcap_file):
                 if opt[0] == 12:
                     print opt[1]
                     return opt[1]
-    return '***'
+    return 'cannot-find-name'
 
 def pktHandler(pkt):
     try:
         mac_addr = str(pkt[Ether].src)
         if mac_addr in monitor_device.keys() and mac_addr not in temp_black_list:
             fileName = mac_addr.replace(':',"-")
+            try:
+                    hostname = get_hostname(fileName + ".pcap")
+            except Exception as e:
+                print e
+
+            fileName = hostname+"#"+fileName
+
             if datetime.datetime.now() < monitor_device[mac_addr]:
                 print("[INFO] Keep monitoring " + mac_addr)
                 wrpcap(fileName+".pcap", pkt, append=True)
@@ -56,6 +63,7 @@ def pktHandler(pkt):
                 temp_black_list.add(mac_addr)
 
                 # to-do: send to server
+                
                 try:
                     call("scp -i ~/.ssh/id_rsa " + fileName + ".pcap mud_server@192.168.2.118:/home/mud_server/Desktop/RouterSend/" + fileName + ".pcap", shell=True)
                 except Exception as e:
@@ -95,8 +103,14 @@ def standard_dns_callback(pkt):
         dns_callback(pkt)
 
     elif "BOOTP" in layers:
-        #features = get_device_dhcp_info(pkt)
-        if False:
+        
+        try:
+            features = get_device_dhcp_info(pkt)
+        except Exception as e:
+            print "Line 103"
+            print e
+
+        if not features['IoT']:
             # General Purpose device
             print("[INFO] " + str(features))
             
@@ -110,7 +124,7 @@ def standard_dns_callback(pkt):
                 else:
                     pass
             except Exception as e:
-                print "Line 77"
+                print "Line 119"
                 print e
 
     else:
@@ -119,10 +133,12 @@ def standard_dns_callback(pkt):
 blacklist = set()
 
 def search_mud_file(pkt):
-    wrpcap("a.pcap", pkt)
-    mud_addr = check_mud("a.pcap")
     mac_addr = str(pkt[Ether].src)
-    hostname = get_hostname("a.pcap")
+    fileName = mac_addr.replace(":","-") + ".pcap"
+    wrpcap(fileName, pkt)
+    mud_addr = check_mud(fileName)
+    
+    hostname = get_hostname(fileName)
 
     if mud_addr:
         devices.add(mac_addr)
@@ -169,7 +185,9 @@ def update_suspicious(mac_addr, hostname):
 def create_pcap_file(pkt):
     try:
         mac_addr = str(pkt[Ether].src)
-        wrpcap(mac_addr+".pcap", pkt)
+        fileName = mac_addr.replace(":","-") + ".pcap"
+        hostname = get_hostname(fileName)
+        wrpcap(hostname+"#"+fileName, pkt)
         end_time = datetime.datetime.now() + DELTA_TIME
         monitor_device[mac_addr] = end_time
         return True

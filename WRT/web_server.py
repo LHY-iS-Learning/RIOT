@@ -89,7 +89,7 @@ def allow():
     delete_from_blocked(mac_addr)
 
     #get new mud file and parse it into acl
-    filename = hostname + '%23' + mac_addr.replace(':', '-')
+    filename = mac_addr.replace(':', '-')
     mud_addr = 'http://192.168.2.118/monitored/' + filename + '.json'
     #use hostname for device name for now
     device = hostname
@@ -97,6 +97,8 @@ def allow():
         obtainMudProfile(device, mac_addr, mud_addr)
     except Exception as e:
         print mud_addr
+        print mac_addr
+        print device
         print "something go wrong in web sever acl part"
         print e
 
