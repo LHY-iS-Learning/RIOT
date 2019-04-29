@@ -75,10 +75,8 @@ def parse_info(matches):
     # get dst Ip list
     dstName = get_destName(matches, dnsName[0])
     dstIpList = get_dest_ip(dstName)
-    # get ACCEPT or REJECT
-    target = matches["actions"]["forwarding"].upper()
-    
-    return prot, dport, dstIpList, target, dstName
+
+    return prot, dport, dstIpList, dstName
 
 def check_SQL_table():
     #configure database and connect
@@ -115,16 +113,23 @@ def ACLtoIPTable(acl, mac_addr):
         ace = acl[0]["aces"]['ace']
         for index in ace:
             matches = index["matches"]
-            print "------> matches: " + str(matches)
-                #Confirm that matches has valid info for dest addr
+
+            #Confirm that matches has valid info for dest addr
             if("ietf-acldns:src-dnsname" not in matches["ipv4"] and \
             "ietf-acldns:dst-dnsname" not in matches["ipv4"]):
                 continue
 
             try:
-                prot, dport, dstIpList, target, dstName = parse_info(matches)
+                # get ACCEPT or REJECT
+                target = index["actions"]["forwarding"].upper()
             except Exception as e:
-                print "Error at parse_info"
+                print "[ERROR] Some MUD file format includes actions inside matches."
+                print e
+
+            try:
+                prot, dport, dstIpList, dstName = parse_info(matches)
+            except Exception as e:
+                print "[ERROR] Error at parse_info"
                 print e
 
             # for each dst IP
