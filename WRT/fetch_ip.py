@@ -7,7 +7,7 @@ import os
 from subprocess import Popen, PIPE, call
 import sqlite3
 import dns.resolver
-from dns_callback import get_hostname
+
 
 def implementIPTablesByJson(file, mac_addr):
     #obtain desired MUD-like object to parse.
@@ -166,3 +166,20 @@ def ACLtoIPTable(acl, mac_addr):
     conn.close()
 
 
+
+
+def get_hostname(pcap_file):
+    import dpkt
+    with open(pcap_file) as f:
+        pcap = dpkt.pcap.Reader(f)
+        for ts, buf in pcap:
+            eth = dpkt.ethernet.Ethernet(buf)
+            ip = eth.data
+            udp = ip.data
+            dhcp = dpkt.dhcp.DHCP(udp.data)
+
+            for opt in dhcp.opts:
+                if opt[0] == 12:
+                    print opt[1]
+                    return opt[1]
+    return 'cannot-find-name'
