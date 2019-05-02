@@ -35,8 +35,7 @@ def extract_policy(pkt):
             domain = pkt[DNSQR].qname.decode('ascii')
             policies["to device policies"].add(protocol + " " + domain)
 
-if __name__ == "__main__":
-
+def compare_policy():
     parser = argparse.ArgumentParser()
     parser.add_argument('unknown', help="Unknown device to be identified")
     args = parser.parse_args()  # unknown#08-02-8e-2b-24-b4.pcap
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     outputpath = 'output_pkl/'
     if matches > THRESH_HOLD:
         pickle.dump( policies, open(outputpath + '#' + best_match, "wb" ) )
-        print("Best match: " + best_match.replace('.pkl', ''))
+        return (True, best_match.replace('.pkl', ''), matches)
     else:
         pickle.dump( policies, open(outputpath + 'unknown' + '#' + mac.replace(':', '-') + '.pkl', "wb" ) )
-        print("Did not find any match.")
+        return (False, 'unknown' + '#' + mac.replace(':', '-'), matches)
