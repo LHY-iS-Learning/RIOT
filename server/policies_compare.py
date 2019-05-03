@@ -6,7 +6,7 @@ import argparse
 global mac
 global policies
 
-THRESH_HOLD = 1.1
+THRESH_HOLD = 0.8
 
 policies = {}
 policies["from device policies"] = set()
@@ -36,6 +36,8 @@ def extract_policy(pkt):
             policies["to device policies"].add(protocol + " " + domain)
 
 def compare_policy():
+    global mac
+    global policies
     parser = argparse.ArgumentParser()
     parser.add_argument('unknown', help="Unknown device to be identified")
     args = parser.parse_args()  # unknown#08-02-8e-2b-24-b4.pcap
@@ -55,8 +57,14 @@ def compare_policy():
     for f in known_devices:
         known = pickle.load( open(path + '/' + f, "rb" ) )
         # print(known)
-        f_match = 1 - len(policies["from device policies"] - known["from device policies"]) / len(policies["from device policies"])
-        t_match = 1 - len(policies["to device policies"] - known["to device policies"]) / len(policies["to device policies"])
+        try:
+            f_match = 1 - len(policies["from device policies"] - known["from device policies"]) / len(policies["from device policies"])
+        except:
+            f_match = 0
+        try:
+            t_match = 1 - len(policies["to device policies"] - known["to device policies"]) / len(policies["to device policies"])
+        except:
+            t_match = 0
         if f_match + t_match > matches:
             matches = f_match + t_match
             best_match = f

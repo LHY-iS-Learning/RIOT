@@ -7,7 +7,7 @@ do
  do
   filepath=$path/$file
   echo $filepath
-  python policies_compare.py $filepath
+  python generate_policy.py $filepath
   rm $path/$file
   mv output_pkl/* /var/www/html/monitored/
  done
