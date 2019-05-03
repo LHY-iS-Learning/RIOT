@@ -4,7 +4,6 @@ from subprocess import call
 import sqlite3
 import datetime
 from iptable_controller import obtainMudProfile
-from send_email import alert
 from update_ip import update_device_domains
 from IoT_Classification import get_device_dhcp_info
 
@@ -63,7 +62,7 @@ def pktHandler(pkt):
                 print("[INFO] Finish monitor " + mac_addr)
                 temp_black_list.add(mac_addr)
 
-                # to-do: send to server
+                print "[INFO] Successfully generate a mud like file" 
                 
                 try:
                     call("scp -i ~/.ssh/id_rsa " + fileName + ".pcap mud_server@192.168.2.118:/home/mud_server/Desktop/RouterSend/" + fileName + ".pcap", shell=True)
@@ -73,12 +72,6 @@ def pktHandler(pkt):
                 call('iptables -A FORWARD  -m mac --mac-source ' + mac_addr + ' -j DROP' + '', shell=True)
                 print 'drop packets for mac:' + mac_addr
                 
-                try:
-                    alert('wh2417@columbia.edu')
-                    # update_suspicious(mac_addr)
-                except Exception as e:
-                    print e
-                print "[INFO] send email to user"
 
                 temp_black_list.remove(mac_addr)
                 monitor_device.pop(mac_addr)
@@ -88,8 +81,6 @@ def pktHandler(pkt):
     except:
         pass
 
-#simulate source server for now
-SourceServer = dict()
 
 # lists of devices seen right now 
 devices = set()
@@ -147,27 +138,12 @@ def search_mud_file(pkt):
         print "[INFO] Obtain MudProfile"
         obtainMudProfile('iot', mac_addr, mud_addr)
 
-    elif SourceServer.get(mac_addr) is not None:
-        #download mud from source server
-        print "[INFO] Download mud file from source server"
-        
     else:
-        print "[INFO] No source server entry"
-
         # Create a pcap file, monitor for one hour and send to server
         create_pcap_file(pkt)
 
         update_suspicious(mac_addr, hostname)
 
-        print "[INFO] Successfully generate a mud like file" 
-
-        # if not pkt[Ether].src in blacklist:
-        #     pass
-        #     update_suspicious(mac_addr)
-        #     alert('wh2417@columbia.edu')
-
-        # blacklist.add(pkt[Ether].src)
-        # print blacklist
 
 def update_suspicious(mac_addr, hostname):
     try:
