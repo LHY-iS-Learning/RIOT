@@ -64,13 +64,14 @@ def generate_mud(policies, device_name):
         to_cnt += 1
     
     mud['ietf-access-control-list:access-lists'] = {'acl':
-                                                        [{'name': 'to-ipv4-' + device_name,
-                                                          'type': 'ipv4-acl-type',
-                                                          'aces': {'ace': to_ace}
-                                                         },
+                                                        [
                                                          {'name': 'from-ipv4-' + device_name,
                                                           'type': 'ipv4-acl-type',
                                                           'aces': {'ace': from_ace}
+                                                         },
+                                                         {'name': 'to-ipv4-' + device_name,
+                                                          'type': 'ipv4-acl-type',
+                                                          'aces': {'ace': to_ace}
                                                          }
                                                         ]
                                                     }
