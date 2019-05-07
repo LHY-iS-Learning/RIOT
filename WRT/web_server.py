@@ -10,8 +10,15 @@ app = Flask(__name__)
 bootstrap = Bootstrap(app)
 @app.route('/')
 def admin():
+    guess = request.args.get('guess')
+    print guess
     rows = get_db_entry()
-    return render_template("admin.html", rows = rows)
+    return render_template("admin.html", rows = rows, guessType = guess)
+    # if guess is None:
+        
+    #     return render_template("admin.html", rows = rows, )
+    # else:
+    #     return render_template("admin.html", rows = rows, guessType = guess)
 
 @app.route('/blocked_devices')
 def blocked_list():
@@ -77,6 +84,25 @@ def keep_block():
     insert_into_blocked(mac_addr, hostname)
     return redirect(url_for('admin'))
 
+@app.route('/allow_page_for_existing_mud', methods = ['GET', 'POST'])
+def allow_case_two():
+    mac_addr = request.form.keys()[0]
+    device = request.form.values()[0]
+
+    print "allowing " + mac_addr + " using mud file of " + device
+
+    iptables_delete(mac_addr)
+    delete_from_blocked(mac_addr)
+
+    mud_addr = 'http://192.168.2.118/Crowd_Source/' + device + '.json'
+    try:
+        obtainMudProfile(device, mac_addr, mud_addr)
+    except Exception as e:
+        print "failed to obtain file for " + device
+        print e
+
+    return redirect(url_for('admin'))
+    
 @app.route('/allow_page', methods = ['GET', 'POST'])
 def allow():
     mac_addr = request.form.keys()[0]
