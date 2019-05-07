@@ -36,5 +36,5 @@ def obtainMudProfile(device, mac_addr, mud_addr):
 
 if __name__ == "__main__":
     obtainMudProfile('cannot-find-name', '08:02:8e:2b:24:b4', '\
-            http://192.168.2.118/Manufacture/AmazonEcho.json \
+            http://192.168.2.118/monitored/08-02-8e-2b-24-b4.json \
             ')

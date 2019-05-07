@@ -2,6 +2,7 @@ from scapy.all import *
 import pickle
 import os
 import argparse
+import generate_mud
 
 global mac
 global policies
@@ -71,8 +72,7 @@ def compare_policy():
     # print(matches)
     outputpath = 'output_pkl/'
     if matches > THRESH_HOLD:
-        pickle.dump( policies, open(outputpath + '#' + best_match, "wb" ) )
         return (True, best_match.replace('.pkl', ''), matches)
     else:
-        pickle.dump( policies, open(outputpath + 'unknown' + '#' + mac.replace(':', '-') + '.pkl', "wb" ) )
-        return (False, 'unknown' + '#' + mac.replace(':', '-'), matches)
+        generate_mud.generate_mud(policies, mac.replace(':', '-'))
+        return (False, mac.replace(':', '-'), matches)
