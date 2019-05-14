@@ -15,9 +15,9 @@ def alert(useraddr):
 
     message = '''\
     <html>
-        <h1>FAIL to find a MUD for this device</h1>
-        <h2>But we generated a MUD like file based on the past activity of your device</h2>
-        <p> Go to the router address </p>
+        <h1>Insecure Device Connect to Network</h1>
+        <h2>We will block the device away from Internet until you made the decision!</h2>
+        <p> Go to the router </p>
         <a href = 'http://192.168.2.1:5000/'> My router: http://192.168.2.1:5000/ </a>
     </html>
     '''

@@ -62,16 +62,16 @@ def pktHandler(pkt):
                 print("[INFO] Finish monitor " + mac_addr)
                 temp_black_list.add(mac_addr)
 
-                print "[INFO] Successfully generate a mud like file" 
-                
+                print "[INFO] Successfully generate a mud like file"
+
                 try:
                     call("scp -i ~/.ssh/id_rsa " + fileName + ".pcap mud_server@192.168.2.118:/home/mud_server/Desktop/RouterSend/" + fileName + ".pcap", shell=True)
                 except Exception as e:
                     print "Error when send to MUD_Server", str(e)
-                    
+
                 call('iptables -A FORWARD  -m mac --mac-source ' + mac_addr + ' -j DROP' + '', shell=True)
                 print 'drop packets for mac:' + mac_addr
-                
+
 
                 temp_black_list.remove(mac_addr)
                 monitor_device.pop(mac_addr)
@@ -82,7 +82,7 @@ def pktHandler(pkt):
         pass
 
 
-# lists of devices seen right now 
+# lists of devices seen right now
 devices = set()
 # router itself
 devices.add("10:da:43:96:1d:64")
@@ -95,7 +95,7 @@ def standard_dns_callback(pkt):
         dns_callback(pkt)
 
     elif "BOOTP" in layers:
-        
+
         try:
             features = get_device_dhcp_info(pkt)
         except Exception as e:
@@ -106,7 +106,7 @@ def standard_dns_callback(pkt):
             # General Purpose device
             print("[INFO] " + str(features))
             print("[INFO] General Purpose Device, allow any any.")
-            
+
         else:
             print("BOOTP: " + pkt[Ether].src)
             mac_addr = str(pkt[Ether].src)
@@ -130,7 +130,7 @@ def search_mud_file(pkt):
     fileName = mac_addr.replace(":","-") + ".pcap"
     wrpcap(fileName, pkt)
     mud_addr = check_mud(fileName)
-    
+
     hostname = get_hostname(fileName)
 
     if mud_addr:
@@ -168,7 +168,7 @@ def create_pcap_file(pkt):
         wrpcap(hostname+"#"+fileName, pkt)
         end_time = datetime.datetime.now() + DELTA_TIME
         monitor_device[mac_addr] = end_time
-        print "[INFO] pcap file created for monitoring purpose: " + fileName 
+        print "[INFO] pcap file created for monitoring purpose: " + fileName
         return True
     except Exception as e:
         print "Line 121"
