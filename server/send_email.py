@@ -49,12 +49,12 @@ def case_two_alert(useraddr, matches, fileName):
 
     message = '''\
     <html>
-       <h1> Hi, we find a similar mud file with similarity {match} </h1>
-       <h2> Is is a(n) {fileN}? </h2>
-       <p> Go to ther router address </p>
+       <h1> Hi, A new device join us!</h1>
+       <h2> We believe it is a  {fileN}? Would you want to let it pass?</h2>
+       <p> Go to the router address </p>
        <a href = 'http://192.168.2.1:5000/?guess={guess}'> My router http://192.168.2.1:5000/?guess={guess} </a>
     </html>
-    '''.format(match = matches, fileN = fileName, guess = fileName)
+    '''.format(fileN = fileName, guess = fileName)
 
     msg = MIMEText(message, 'html')
 
