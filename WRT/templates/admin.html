@@ -21,16 +21,18 @@
                 <td>
                     <form action="{{ url_for('keep_block') }}" method="POST">
                         <input id={{row["mac"]}} name={{row["mac"]}} type="hidden" value = {{row["hostname"]}}>
-                        <button type="submit"> keep block </button>
+                        <button type="submit"> This is not my device, block it! </button>
                     </form>
-                    <form action="{{ url_for('allow') }}" method="POST">
-                        <input id={{row["mac"]}} name={{row["mac"]}} type="hidden" value = {{row["hostname"]}}>
-                        <button type="submit"> apply new mud file </button>
-                    </form>
+                    
                     {% if guessType %}
                         <form action="{{ url_for('allow_case_two') }}" method="POST">
                             <input id={{row["mac"]}} name={{row["mac"]}} type="hidden" value = {{guessType}}>
-                            <button type="submit"> apply existed mud file </button>
+                            <button type="submit"> Yes, this is a {{ guessType }}, let it go! </button>
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('allow') }}" method="POST">
+                            <input id={{row["mac"]}} name={{row["mac"]}} type="hidden" value = {{row["hostname"]}}>
+                            <button type="submit"> This is my device, let it go! </button>
                         </form>
                     {% endif %}
                 </td>

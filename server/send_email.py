@@ -15,9 +15,9 @@ def alert(useraddr):
 
     message = '''\
     <html>
-        <h1>Insecure Device Connect to Network</h1>
-        <h2>We will block the device away from Internet until you made the decision!</h2>
-        <p> Go to the router </p>
+        <h1>Insecure Device Connected to your Network</h1>
+        <h2>We blocked the device's Internet access</h2>
+        <p> To change this setting visit the following page </p>
         <a href = 'http://192.168.2.1:5000/'> My router: http://192.168.2.1:5000/ </a>
     </html>
     '''
@@ -49,9 +49,9 @@ def case_two_alert(useraddr, matches, fileName):
 
     message = '''\
     <html>
-       <h1> Hi, A new device join us!</h1>
-       <h2> We believe it is a  {fileN}? Would you want to let it pass?</h2>
-       <p> Go to the router address </p>
+       <h1> Hi, A new device joined your network!</h1>
+       <h2> We believe it is a(n) {fileN}. Do you recoggnize this device?</h2>
+       <p> Visit the following page to permit/block the device's usage </p>
        <a href = 'http://192.168.2.1:5000/?guess={guess}'> My router http://192.168.2.1:5000/?guess={guess} </a>
     </html>
     '''.format(fileN = fileName, guess = fileName)
