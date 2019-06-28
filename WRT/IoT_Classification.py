@@ -92,22 +92,5 @@ def get_device_dhcp_info(pkt):
                         features['device_type'] = v
                         if (v.find('Printer') != -1):
                             features['IoT'] = True
-                        
-            if opt_name == 'hostname':
-                if (opt_value.find('iPhone') != -1):
-                    features['device_type'] = "iPhone"
-                    features['IoT']= False
-                if (opt_value.find('iPad') != -1):
-                    features['device_type']= "iPad"
-                    features['IoT']= False
-                if (opt_value.find('android') != -1):
-                    features['device_type']= "Android"
-                    features['IoT']= False
-                if (opt_value.find('Windows-Phone') != -1):
-                    features['device_type']= "Windows-Phone"
-                    features['IoT']= False
-                if (opt_value.find('BLACKBERRY') != -1):
-                    features['device_type']= "BLACKBERRY"
-                    features['IoT']= False
 
     return features
